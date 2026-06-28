@@ -1,0 +1,28 @@
+# lingdb — dependencies. Python 3.14, PostgreSQL 18.
+# Install:  venv\Scripts\python -m pip install -r requirements.txt
+
+# ── Core (Phase 1: import + morphology) ──────────────────────
+psycopg[binary]>=3.1          # DB driver (psycopg v3, NOT psycopg2)
+python-dotenv>=1.0            # reads .env
+rich>=13.0                    # terminal progress dashboard
+tqdm>=4.66                    # progress bars
+
+# Morphology
+stanza>=1.9                   # neural POS/lemmatization (en, de)
+pymorphy3>=2.0                # Russian morphology (fast on CPU)
+pymorphy3-dicts-ru>=2.4       # pymorphy3 dictionaries for ru
+
+# Presentation / defense (lingdb.ipynb) + tests
+jupyter>=1.0                  # run the defense notebook
+pandas>=2.0                   # tabular output in the notebook
+pytest>=8.0                   # run the tests
+
+# ── Phase 2 (concept graph) — needed later ───────────────────
+networkx>=3.0                 # concept graph, Union-Find, metrics
+scikit-learn>=1.4             # TF-IDF gloss matching (pass 3)
+sentence-transformers>=3.0    # LaBSE embeddings (pass 4)
+numpy>=1.26
+scipy>=1.12
+
+# ── Evaluation (Phase 3) — needed later ──────────────────────
+wn>=0.9                       # access to OMW (concept alignment, F1)
