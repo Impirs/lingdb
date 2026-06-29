@@ -17,7 +17,13 @@ STANZA_DIR = Path(os.environ.get("STANZA_DIR", str(ROOT / "stanza_resources")))
 
 BATCH_SIZE = int(os.environ.get("BATCH_SIZE", "2000"))
 
-# ── Embeddings / concepts (Phase 2 — not used in Phase 1 yet) ──
+# ── Concepts (Phase 2) ─────────────────────────────────────────
+# Union-Find components larger than this are treated as homonym-bridged "giant
+# components" (bridged through high-frequency polysemous words) and are NOT
+# grounded in passes 1-2 — they are left for passes 3-4 (TF-IDF / LaBSE).
+CONCEPT_COMPONENT_CAP = int(os.environ.get("CONCEPT_COMPONENT_CAP", "2000"))
+
+# Embeddings (Phase 2, passes 3-4 — not used yet)
 EMBED_MODEL = os.environ.get("EMBED_MODEL", "sentence-transformers/LaBSE")
 EMBED_BATCH_SIZE = int(os.environ.get("EMBED_BATCH_SIZE", "256"))
 CONCEPT_SIM_THRESHOLD = float(os.environ.get("CONCEPT_SIM_THRESHOLD", "0.70"))

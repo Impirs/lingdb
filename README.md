@@ -26,7 +26,7 @@ and a translation API.
 | Phase | What it does | Status |
 |-------|--------------|:------:|
 | **1. Cleaning + morphology** | streaming dump read → normalized `words`, `word_forms`, `senses`, `examples`, `translation_hints`, `lexical_relations`; strips wiki markup / stress / footnotes; POS tagging and lemmatization (Stanza + pymorphy3) | ✅ done |
-| **2. Concept graph** | 4 passes of decreasing confidence: direct translation edges (1.0) → Union-Find transitive closure → TF-IDF gloss matching (0.85) → LaBSE embeddings (0.70). Graph on NetworkX | 🚧 in progress |
+| **2. Concept graph** | 4 passes of decreasing confidence: direct translation edges (1.0) → Union-Find transitive closure → TF-IDF gloss matching (0.85) → LaBSE embeddings (0.70). Graph on NetworkX | 🟡 passes 1+2 done; 3+4 next |
 | **3. Analytics** | translation over the graph, synonym clusters, coverage, graph metrics | 🚧 in progress |
 | **4. Storage** | everything in PostgreSQL (schema in [`src/db/`](src/db/)) | ✅ schema done |
 
@@ -43,9 +43,10 @@ src/
     db.py            DB access: batch inserts (UNNEST), provenance, resumability
     phase_import.py  Phase 1a — import and cleaning
     phase_morph.py   Phase 1b — morphology (Stanza / pymorphy3)
+    phase_concepts.py Phase 2 — concept graph (passes 1+2: direct edges + Union-Find)
     morph_tags.py    Wiktionary tags → UD features (fast path, no neural net)
   db/                DB schema (00_init.sql … 08_seed_reference.sql)
-  terminal/          Rich progress dashboard and summaries
+  terminal/          progress UI: Rich dashboard (TTY) + plain text (notebook); get_dashboard() picks
   tests/             tests
 ORI_predlog.md       project proposal (methodology, evaluation)
 requirements.txt     Python dependencies
@@ -89,6 +90,9 @@ venv\Scripts\python src\main.py --phase import morph --langs en --workers 1 --li
 
 # Import only, German only
 venv\Scripts\python src\main.py --phase import --langs de
+
+# Phase 2 — build the concept graph (after Phase 1; rebuilds from current DB content)
+venv\Scripts\python src\main.py --phase concepts
 
 # Everything (once all phases are ready)
 venv\Scripts\python src\main.py --phase all
@@ -146,7 +150,8 @@ The kaikki dumps are "dirty". Phase 1 cleans:
 ## Roadmap
 
 - [x] **Phase 1** — import, cleaning, morphology; DB schema; CLI orchestrator.
-- [ ] **Phase 2** — concept graph (NetworkX): 4 passes, incremental attachment.
+- [x] **Phase 2 (passes 1+2)** — concept graph via direct translation edges + Union-Find (NetworkX); concepts + sense_concepts.
+- [ ] **Phase 2 (passes 3+4)** — TF-IDF homonym resolution; LaBSE attachment of the remainder; incremental append-only attachment.
 - [ ] **Phase 3** — analytics: `translate_word()` over the graph, synonym clusters, metrics.
 - [ ] **Evaluation** — coverage, comparison with MUSE and OMW (F1), the Swadesh list.
 - [ ] **`lingdb.ipynb`** — defense notebook (function calls, tests, metrics).

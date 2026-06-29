@@ -63,6 +63,9 @@ def run(phases: list[str], langs, workers: int, limit, engine: str) -> None:
         elif ph == "morph":
             from pipeline import phase_morph
             phase_morph.run(langs=langs, workers=workers, engine=engine, limit=limit)
+        elif ph == "concepts":
+            from pipeline import phase_concepts
+            phase_concepts.run(langs=langs, workers=workers)
         else:
             report.warn(f"phase '{ph}' is not implemented yet (in progress).")
 
