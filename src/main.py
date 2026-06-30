@@ -12,7 +12,8 @@ Full CPU utilization comes from multiprocessing (separate processes bypass the G
 
 Phases (see ORI_predlog.md):
     import · morph   → Phase 1 (Čišćenje i morfološka analiza)
-    concepts         → Phase 2 (Konstrukcija grafa koncepata)   [in progress]
+    concepts         → Phase 2, passes 1-3 (direct edges + Union-Find + TF-IDF)
+    labse            → Phase 2, pass 4 (LaBSE attachment; separate, heavy run)
     analytics        → Phase 3 (Analitika)                      [in progress]
 """
 from __future__ import annotations
@@ -35,7 +36,7 @@ try:
 except Exception:
     pass
 
-PHASES = ["import", "morph", "concepts", "analytics"]
+PHASES = ["import", "morph", "concepts", "labse", "analytics"]
 
 
 def _parse_args() -> argparse.Namespace:
@@ -66,6 +67,9 @@ def run(phases: list[str], langs, workers: int, limit, engine: str) -> None:
         elif ph == "concepts":
             from pipeline import phase_concepts
             phase_concepts.run(langs=langs, workers=workers)
+        elif ph == "labse":
+            from pipeline import phase_labse
+            phase_labse.run(langs=langs, workers=workers, limit=limit)
         else:
             report.warn(f"phase '{ph}' is not implemented yet (in progress).")
 

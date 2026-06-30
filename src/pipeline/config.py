@@ -22,11 +22,20 @@ BATCH_SIZE = int(os.environ.get("BATCH_SIZE", "2000"))
 # components" (bridged through high-frequency polysemous words) and are NOT
 # grounded in passes 1-2 — they are left for passes 3-4 (TF-IDF / LaBSE).
 CONCEPT_COMPONENT_CAP = int(os.environ.get("CONCEPT_COMPONENT_CAP", "2000"))
+# Pass 3: minimum TF-IDF cosine between source and candidate target sense glosses
+# to accept a disambiguated edge. Cross-lingual pairs (no shared tokens) score ~0
+# and fall below this → left for pass 4 (LaBSE).
+CONCEPT_TFIDF_THRESHOLD = float(os.environ.get("CONCEPT_TFIDF_THRESHOLD", "0.50"))
 
-# Embeddings (Phase 2, passes 3-4 — not used yet)
-EMBED_MODEL = os.environ.get("EMBED_MODEL", "sentence-transformers/LaBSE")
+# Embeddings (Phase 2, pass 4 — LaBSE attachment of the remainder).
+# The proposal names LaBSE; on CPU it is very slow over millions of senses, so the
+# default is the faster multilingual MiniLM (cross-lingual, ~480 MB). For the
+# proposal model set EMBED_MODEL=sentence-transformers/LaBSE.
+EMBED_MODEL = os.environ.get(
+    "EMBED_MODEL", "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
 EMBED_BATCH_SIZE = int(os.environ.get("EMBED_BATCH_SIZE", "256"))
-CONCEPT_SIM_THRESHOLD = float(os.environ.get("CONCEPT_SIM_THRESHOLD", "0.70"))
+# Cosine threshold to attach an ungrounded sense to the nearest concept (pass 4).
+CONCEPT_SIM_THRESHOLD = float(os.environ.get("CONCEPT_SIM_THRESHOLD", "0.75"))
 
 # Active languages (English first — it is rich in translations). See ORI_predlog.md §2.
 LANGUAGES: dict[str, str] = {

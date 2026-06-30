@@ -26,7 +26,7 @@ and a translation API.
 | Phase | What it does | Status |
 |-------|--------------|:------:|
 | **1. Cleaning + morphology** | streaming dump read → normalized `words`, `word_forms`, `senses`, `examples`, `translation_hints`, `lexical_relations`; strips wiki markup / stress / footnotes; POS tagging and lemmatization (Stanza + pymorphy3) | ✅ done |
-| **2. Concept graph** | 4 passes of decreasing confidence: direct translation edges (1.0) → Union-Find transitive closure → TF-IDF gloss matching (0.85) → LaBSE embeddings (0.70). Graph on NetworkX | 🟡 passes 1+2 done; 3+4 next |
+| **2. Concept graph** | 4 passes of decreasing confidence: direct translation edges (1.0) → Union-Find transitive closure → TF-IDF gloss matching (0.85) → embedding attachment (0.70). Graph on NetworkX | ✅ passes 1–4 (`concepts` + `labse`) |
 | **3. Analytics** | translation over the graph, synonym clusters, coverage, graph metrics | 🚧 in progress |
 | **4. Storage** | everything in PostgreSQL (schema in [`src/db/`](src/db/)) | ✅ schema done |
 
@@ -94,6 +94,9 @@ venv\Scripts\python src\main.py --phase import --langs de
 # Phase 2 — build the concept graph (after Phase 1; rebuilds from current DB content)
 venv\Scripts\python src\main.py --phase concepts
 
+# Phase 2, pass 4 — LaBSE/MiniLM attachment of the remainder (separate, heavy; --limit to slice)
+venv\Scripts\python src\main.py --phase labse
+
 # Everything (once all phases are ready)
 venv\Scripts\python src\main.py --phase all
 ```
@@ -102,7 +105,7 @@ venv\Scripts\python src\main.py --phase all
 
 | Flag | Meaning | Default |
 |------|---------|---------|
-| `--phase` | phases: `import`, `morph`, `concepts`, `analytics`, or `all` | `all` |
+| `--phase` | phases: `import`, `morph`, `concepts`, `labse`, `analytics`, or `all` | `all` |
 | `--langs` | language codes (`en de ru`) | all active |
 | `--workers` | processes for CPU-bound phases (multiprocessing) | CPU count |
 | `--limit` | row limit per dump — for a slice check | no limit |
@@ -150,8 +153,9 @@ The kaikki dumps are "dirty". Phase 1 cleans:
 ## Roadmap
 
 - [x] **Phase 1** — import, cleaning, morphology; DB schema; CLI orchestrator.
-- [x] **Phase 2 (passes 1+2)** — concept graph via direct translation edges + Union-Find (NetworkX); concepts + sense_concepts.
-- [ ] **Phase 2 (passes 3+4)** — TF-IDF homonym resolution; LaBSE attachment of the remainder; incremental append-only attachment.
+- [x] **Phase 2 (passes 1+2+3)** — concept graph: unambiguous direct edges (1.0) + Union-Find (NetworkX) + TF-IDF gloss disambiguation of ambiguous targets (0.85).
+- [x] **Phase 2 (pass 4)** — embedding attachment of the remainder (0.70) via `--phase labse` (multilingual MiniLM by default; LaBSE configurable). Resumable.
+- [ ] **Phase 2 incremental** — append-only attachment when adding a language (currently the graph is rebuilt from scratch).
 - [ ] **Phase 3** — analytics: `translate_word()` over the graph, synonym clusters, metrics.
 - [ ] **Evaluation** — coverage, comparison with MUSE and OMW (F1), the Swadesh list.
 - [ ] **`lingdb.ipynb`** — defense notebook (function calls, tests, metrics).
